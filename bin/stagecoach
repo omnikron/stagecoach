@@ -285,7 +285,7 @@ module Stagecoach
     Git.change_to_branch(master)
 
     # Redmine issue to feedback status
-    if redmine_issue_number =  config[branch][:redmine_issue]
+    if redmine_issue_number =  config[from_branch][:redmine_issue]
       CommandLine.line_break
       puts "Attempting to change Redmine ticket status to 'Feedback' for you:"
       issue = Redmine.issue(redmine_issue_number)
