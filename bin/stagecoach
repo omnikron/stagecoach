@@ -45,7 +45,7 @@ module Stagecoach
   end
 
   if opts[:version]
-    p 'Stagecoach %s' VERSION
+    p 'Stagecoach %s' % VERSION
     p 'Exiting...'
     exit
   end
