@@ -79,6 +79,7 @@ This automates the entire deploy workflow for you as follows:
         opt :push, "Use this option to push your changes to your remote branch (will be created if necessary)"
         opt :redmine, "Enter your redmine/planio issue number here, eg. stagecoach -r 1234 (optional)", :type  => :string
         opt :setup, "Use this the first time you run stagecoach to save your redmine repository and api key"
+        opt :version, "Prints the current version"
       end
     end
   end

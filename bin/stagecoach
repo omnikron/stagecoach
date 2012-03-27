@@ -3,6 +3,7 @@
 require File.dirname(__FILE__) + '/../lib/stagecoach.rb'
 
 CONFIG_FILE = `pwd`.chomp + '/.stagecoach'
+VERSION = File.open('../VERSION').read
 
 module Stagecoach
   staging = 'staging'
@@ -42,6 +43,12 @@ module Stagecoach
       puts "You can't enter a github issue at the same time as a redmine issue at the moment.  Make up your mind!\nExiting..."
       exit
     end
+  end
+
+  if opts[:version]
+    p 'Stagecoach %s' VERSION
+    p 'Exiting...'
+    exit
   end
 
   # Set up redmine client config.
