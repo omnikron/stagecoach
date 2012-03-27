@@ -14,7 +14,8 @@ module Stagecoach
 
   # Check that original_branch actually exists.
   unless Git.branch_exist?(original_branch)
-    puts "#{original_branch} does not exist. The -f option should only be used with branches that already exist."
+    puts "|#{original_branch}| does not exist.".red
+    puts "The -f option is for choosing which branch you want to branch out from."
     puts "Run stagecoach -h for help"
     puts "Exiting..."
     exit
