@@ -6,13 +6,12 @@ CONFIG_FILE = `pwd`.chomp + '/.stagecoach'
 VERSION = File.open('../VERSION').read
 
 module Stagecoach
-  staging = 'staging'
-  master  = opts[:from]
-    
-
   # Command line options courtesy of the Trollop gem.
   opts = CommandLine.trollop
 
+  staging = 'staging'
+  master  = opts[:from]
+  
   # Initial setup with -s flag.
   if opts[:setup]
     Config.setup
