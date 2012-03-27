@@ -100,8 +100,8 @@ module Stagecoach
         puts `git checkout #{branch}`
       end
 
-      def pull
-        puts `git pull`
+      def pull(branch)
+        puts `git pull origin #{branch}`
       end
 
       def branch_exist?(branch)

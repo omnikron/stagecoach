@@ -117,9 +117,9 @@ module Stagecoach
     CommandLine.line_break
     puts "Stagecoach: initial stage"
 
-    # Change to master, pull changes, and create a new branch.
+    # Change to from branch, pull changes, and create a new branch.
     CommandLine.line_break  
-    puts "Switching to master branch"
+    puts "Switching to #{master} branch"
     #
     # TODO if there is a file that has been git added but not git committed, it
     # will pop up at this point looking confusing (eg. "A     test_file").
@@ -127,7 +127,7 @@ module Stagecoach
     #
     Git.checkout(master)
     puts "Pulling changes:"
-    Git.pull
+    Git.pull(master)
     if opts[:branch_given]
       new_branch = opts[:branch]
     else  
@@ -145,18 +145,17 @@ module Stagecoach
     # Make sure new local branch does not already exist.
     if Git.branch_exist?(new_branch)
       print "There is already a local branch called #{new_branch}.[U]se or [Q]uit:"
-######## This section was to check that the branch was up to date with master,
-#      if Git.diff(master, new_branch) == ""
-#        print "#{new_branch} is up to date with master.  [U]se or [Q]uit:  "
-#      else 
-#        puts "#{new_branch} is not up to date with master. Please use a different branch or update this one.".red
-#        puts "Exiting..."
-#        CommandLine.line_break
-#        puts "The following files in branch '#{new_branch}' differ from their master branch versions:"
-#        puts Git.diff(master, new_branch)
-#        CommandLine.line_break
-#        exit
-#      end
+      if Git.diff(master, new_branch) == ""
+        print "#{new_branch} is up to date with #{master}.  [U]se or [Q]uit:  "
+      else 
+        puts "#{new_branch} is not up to date with #{master}. Please use a different branch or update this one.".red
+        puts "Exiting..."
+        CommandLine.line_break
+        puts "The following files in branch '#{new_branch}' differ from their #{master} branch versions:"
+        puts Git.diff(master, new_branch)
+        CommandLine.line_break
+        exit
+      end
       case STDIN.gets.chomp
       when 'U'
         Git.change_to_branch(new_branch)
