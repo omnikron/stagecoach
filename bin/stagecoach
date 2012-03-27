@@ -45,8 +45,8 @@ module Stagecoach
   end
 
   if opts[:version]
-    p 'Stagecoach %s' % VERSION
-    p 'Exiting...'
+    puts "Redmine Stagecoach"
+    puts VERSION
     exit
   end
 
