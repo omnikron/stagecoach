@@ -17,6 +17,7 @@ module Stagecoach
     Config.setup
   end
 
+  
   # Initial setup without -s flag.
   unless File.exist?(CONFIG_FILE)
     puts "No .stagecoach file present, running initial setup."
@@ -44,11 +45,6 @@ module Stagecoach
     end
   end
 
-  if opts[:version]
-    puts "Redmine Stagecoach"
-    puts VERSION
-    exit
-  end
 
   # Set up redmine client config.
   RedmineApi::Client.instance_eval do

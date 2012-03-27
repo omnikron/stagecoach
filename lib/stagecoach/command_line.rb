@@ -8,6 +8,7 @@ module Stagecoach
       require 'trollop'
       # Command line options using Trollop.
       Trollop::options do
+        version "Stagecoach %s" % VERSION
         banner <<-EOS
 stagecoach works in two stages, init and deploy. The init stage creates a branch based on a redmine/planio issue, and the deploy stage pushes, merges and (yes!) deploys it. 
 
