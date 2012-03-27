@@ -6,7 +6,8 @@ CONFIG_FILE = `pwd`.chomp + '/.stagecoach'
 
 module Stagecoach
   staging = 'staging'
-  master  = 'master'
+  master  = opts[:from]
+    
 
   # Command line options courtesy of the Trollop gem.
   opts = CommandLine.trollop
@@ -141,18 +142,19 @@ module Stagecoach
 
     # Make sure new local branch does not already exist.
     if Git.branch_exist?(new_branch)
-      puts "There is already a local branch called #{new_branch}."
-      if Git.diff(master, new_branch) == ""
-        print "#{new_branch} is up to date with master.  [U]se or [Q]uit:  "
-      else 
-        puts "#{new_branch} is not up to date with master. Please use a different branch or update this one.".red
-        puts "Exiting..."
-        CommandLine.line_break
-        puts "The following files in branch '#{new_branch}' differ from their master branch versions:"
-        puts Git.diff(master, new_branch)
-        CommandLine.line_break
-        exit
-      end
+      print "There is already a local branch called #{new_branch}.[U]se or [Q]uit:"
+######## This section was to check that the branch was up to date with master,
+#      if Git.diff(master, new_branch) == ""
+#        print "#{new_branch} is up to date with master.  [U]se or [Q]uit:  "
+#      else 
+#        puts "#{new_branch} is not up to date with master. Please use a different branch or update this one.".red
+#        puts "Exiting..."
+#        CommandLine.line_break
+#        puts "The following files in branch '#{new_branch}' differ from their master branch versions:"
+#        puts Git.diff(master, new_branch)
+#        CommandLine.line_break
+#        exit
+#      end
       case STDIN.gets.chomp
       when 'U'
         Git.change_to_branch(new_branch)
@@ -163,7 +165,7 @@ module Stagecoach
       Git.new_branch(new_branch)
     end
 
-    # Ugly code, pretty output...
+    # Pretty output...
     CommandLine.line_break
 
     # Issue handling.

@@ -73,10 +73,11 @@ This automates the entire deploy workflow for you as follows:
 #{"Flags".red}
         EOS
         opt :branch, "Enter your new branch name here, eg. stagecoach -b new_branch (optional)", :type => :string
-        opt :redmine, "Enter your redmine/planio issue number here, eg. stagecoach -r 1234 (optional)", :type  => :string
+        opt :deploy, "Use this option to  deploy from your current branch to any branch you choose, eg. stagecoach -d staging", :type => :string 
+        opt :from, "Use this option to set the branch you want to branch off from.  Default is master", :type => :string, :default => "master"
         opt :github, "Enter your github issue number here, eg. stagecoach -g 1234 (optional)", :type => :string
         opt :push, "Use this option to push your changes to your remote branch (will be created if necessary)"
-        opt :deploy, "Use this option to  deploy from your current branch to any branch you choose, eg. stagecoach -d staging", :type => :string 
+        opt :redmine, "Enter your redmine/planio issue number here, eg. stagecoach -r 1234 (optional)", :type  => :string
         opt :setup, "Use this the first time you run stagecoach to save your redmine repository and api key"
       end
     end
