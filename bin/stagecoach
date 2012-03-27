@@ -1,21 +1,33 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 require File.dirname(__FILE__) + '/../lib/stagecoach.rb'
+VERSION = File.open(File.dirname(__FILE__) + '/../VERSION').read
 
 CONFIG_FILE = `pwd`.chomp + '/.stagecoach'
 
 module Stagecoach
-  staging = 'staging'
-  master  = 'master'
-
   # Command line options courtesy of the Trollop gem.
   opts = CommandLine.trollop
 
+  staging = 'staging'
+  original_branch  = opts[:from]
+
+  # Check that original_branch actually exists.
+  unless Git.branch_exist?(original_branch)
+    puts "|#{original_branch}| does not exist.".red
+    puts "The -f option is for choosing which branch you want to branch out from."
+    puts "Run stagecoach -h for help"
+    puts "Exiting..."
+    exit
+  end
+
+  
   # Initial setup with -s flag.
   if opts[:setup]
     Config.setup
   end
 
+  
   # Initial setup without -s flag.
   unless File.exist?(CONFIG_FILE)
     puts "No .stagecoach file present, running initial setup."
@@ -42,6 +54,7 @@ module Stagecoach
       exit
     end
   end
+
 
   # Set up redmine client config.
   RedmineApi::Client.instance_eval do
@@ -114,17 +127,17 @@ module Stagecoach
     CommandLine.line_break
     puts "Stagecoach: initial stage"
 
-    # Change to master, pull changes, and create a new branch.
+    # Change to from branch, pull changes, and create a new branch.
     CommandLine.line_break  
-    puts "Switching to master branch"
+    puts "Switching to #{original_branch} branch"
     #
     # TODO if there is a file that has been git added but not git committed, it
     # will pop up at this point looking confusing (eg. "A     test_file").
     # Handle this better?
     #
-    Git.checkout(master)
+    Git.checkout(original_branch)
     puts "Pulling changes:"
-    Git.pull
+    Git.pull(original_branch)
     if opts[:branch_given]
       new_branch = opts[:branch]
     else  
@@ -141,15 +154,15 @@ module Stagecoach
 
     # Make sure new local branch does not already exist.
     if Git.branch_exist?(new_branch)
-      puts "There is already a local branch called #{new_branch}."
-      if Git.diff(master, new_branch) == ""
-        print "#{new_branch} is up to date with master.  [U]se or [Q]uit:  "
+      print "There is already a local branch called #{new_branch}.[U]se or [Q]uit:"
+      if Git.diff(original_branch, new_branch) == ""
+        print "#{new_branch} is up to date with #{original_branch}.  [U]se or [Q]uit:  "
       else 
-        puts "#{new_branch} is not up to date with master. Please use a different branch or update this one.".red
+        puts "#{new_branch} is not up to date with #{original_branch}. Please use a different branch or update this one.".red
         puts "Exiting..."
         CommandLine.line_break
-        puts "The following files in branch '#{new_branch}' differ from their master branch versions:"
-        puts Git.diff(master, new_branch)
+        puts "The following files in branch '#{new_branch}' differ from their #{original_branch} branch versions:"
+        puts Git.diff(original_branch, new_branch)
         CommandLine.line_break
         exit
       end
@@ -163,7 +176,7 @@ module Stagecoach
       Git.new_branch(new_branch)
     end
 
-    # Ugly code, pretty output...
+    # Pretty output...
     CommandLine.line_break
 
     # Issue handling.
@@ -282,7 +295,6 @@ module Stagecoach
     Git.merge(to_branch, from_branch)
     Git.push(to_branch)
     Capistrano.deploy(to_branch)
-    Git.change_to_branch(master)
 
     # Redmine issue to feedback status
     if redmine_issue_number =  config[from_branch][:redmine_issue]
