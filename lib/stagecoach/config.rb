@@ -50,15 +50,6 @@ module Stagecoach
           exit
         end
 
-        # TODO Tell git to use a global config file if one is not used. Also if one
-        # is used and it is not .gitconfig, we need to save .stagecoach to that file somehow
-        unless Git.global_ignore_file
-          Git.global_ignore_file(".gitignore")  
-        end
-
-        # Tell git to ignore the stagecoach config file
-        Git.global_ignore('.stagecoach')
-
         # Set up global github username if it is not there
         loop do
           if Git.global_config(:github, :user) == ""

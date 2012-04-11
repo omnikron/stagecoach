@@ -4,18 +4,6 @@ module Stagecoach
       def branches
         `git branch`.split("\n")
       end
-
-      def global_ignore_file(set = nil)
-         `git config --global core.excludesfile #{set}`
-      end
-
-      def global_ignore(filename)
-        # Check if filename is ignored already and ignores it if not
-        gitignore = Git.global_ignore_file.strip 
-          unless File.read(gitignore) =~ /\.stagecoach/
-            gitignore.puts(filename)
-          end
-      end
       
       def global_config(header, config)
         `git config --global #{header}.#{config}`
