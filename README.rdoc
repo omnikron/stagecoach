@@ -13,7 +13,7 @@ All stagecoach config is saved in /path/to/your/repo/.stagecoach which is create
 so if you need to remove a branch or edit the issue number that a branch points to, it is possible (although not necessarily recommended) to edit it.
 
 == Init Stage
-  stagecoach -p[lanio] 4115 (OR) -g[ithub] 525 -b[ranch] my_new_branch
+  stagecoach -r[edmine] 4115 (OR) -g[ithub] 525 -b[ranch] my_new_branch
   (optional: -f[rom] original_branch, default => master)
 
 You can also just run stagecoach without any flags and it will allow you to enter this stuff manually.
