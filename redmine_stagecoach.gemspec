@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "redmine_stagecoach"
-  s.version = "0.6.5"
+  s.version = "0.6.6"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Oli Barnett"]
-  s.date = "2012-03-27"
+  s.date = "2012-04-11"
   s.description = "Git/capistrano workflow automation script with Redmine & Github issue integration"
   s.email = "o.barnett@digitaleseiten.de"
   s.executables = ["stagecoach"]
