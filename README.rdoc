@@ -9,7 +9,7 @@ Otherwise it may (will) break.
 The first time you run stagecoach it will ask you for some information, namely your redmine/planio repo URL and your API key for this repo.
 It will also install a custom commit-msg git hook (if you ask it to) - for more information, see below.  
 
-All stagecoach config is saved in /path/to/your/repo/.stagecoach which is created at initial setup and added to your global .gitignore.  This is a yaml file with fairly obvious syntax
+All stagecoach config is saved in /path/to/your/repo/.stagecoach~ which is created at initial setup and added to your global .gitignore.  This is a yaml file with fairly obvious syntax
 so if you need to remove a branch or edit the issue number that a branch points to, it is possible (although not necessarily recommended) to edit it.
 
 == Init Stage
