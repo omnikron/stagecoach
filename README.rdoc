@@ -33,7 +33,7 @@ If you are working from a github issue, we can all get on with our lives.
 Future versions of stagecoach may do the coding for you, but at the moment you have to do this part manually.
 Just code and commit, code and commit until your feature or fix is ready.
 
-<b>Commit-msg githook</b>
+<b>Commit-msg githoo:</b> 
 If you opt to install the commit-msg githook during initial setup (stagecoach -s) then your commit messages will be automatically referenced to the github issue of the branch you are in 
 (this only applies to branches created or registered in Stagecoach).
 
@@ -58,7 +58,7 @@ This automates the entire deploy workflow for you as follows:
   set redmine/planio ticket to 'feedback' status (if applicable)
  
 <b> Sample usage: </b>
-  stagecoach -p 4115 -b new_branch_name -f branch_to_branch_out_from
+  stagecoach -r 4115 -b new_branch_name -f branch_to_branch_out_from
   [code, commit until feature or fix is complete]
   stagecoach -d staging
 
