@@ -1,16 +1,7 @@
 #!/usr/bin/env ruby
 #
-# Git commit-msg hook. If your branch name is in the form "t123", automatically
-# adds "Refs #123." to commit messages unless they mention "#123" already.
-# Include "#close" or "#finish" to add "Closes #123."
-#
-# For Pivotal Tracker, branch names like "s123" adds "[#123]".
-# Include "#close" or "#finish" to add "[Finishes #123]".
-#
-# If you include "#noref" in the commit message, nothing will be added to
-# the commit message, and the "#noref" itself will be stripped.
-#
-# By Henrik Nyh <http://henrik.nyh.se> 2009-09-10 under the MIT License.
+# Forked from:
+# Henrik Nyh <http://henrik.nyh.se> 2009-09-10 under the MIT License.
 #
 #
 # Install:
@@ -39,7 +30,7 @@ end
 if gem_available?('redmine_stagecoach') == false
   exit
 else
-  config = YAML::load(File.open(File.dirname(__FILE__) + '/../../.stagecoach', 'r'))
+  config = YAML::load(File.open(File.dirname(__FILE__) + '/../../.stagecoach~', 'r'))
 end
 
 # Find out what branch we are on
