@@ -1,6 +1,6 @@
 require 'psych'
 require 'yaml'
-require 'FileUtils'
+require 'fileutils'
 
 module Stagecoach
   class Config
