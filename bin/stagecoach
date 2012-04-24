@@ -1,11 +1,11 @@
 #!/usr/bin/env ruby
 # encoding: utf-8
 require File.dirname(__FILE__) + '/../lib/stagecoach.rb'
-VERSION = File.open(File.dirname(__FILE__) + '/../VERSION').read
-
-CONFIG_FILE = `pwd`.chomp + '/.stagecoach~'
 
 module Stagecoach
+  VERSION = File.open(File.dirname(__FILE__) + '/../VERSION').read
+  CONFIG_FILE = `pwd`.chomp + '/.stagecoach~'
+
   # Command line options courtesy of the Trollop gem.
   opts = CommandLine.trollop
 
