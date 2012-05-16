@@ -1,3 +1,4 @@
+# encoding: UTF-8
 require 'psych'
 require 'yaml'
 require 'fileutils'
@@ -6,7 +7,14 @@ module Stagecoach
   class Config
     class << self
       def new
-        File.open(CONFIG_FILE, 'w') { |f| f.write("---\nredmine_site: none\nredmine_api_key: none")}
+        File.open(CONFIG_FILE, 'w') { |f| f.write("---\nredmine_site: \nredmine_api_key: \nredmine_user_id:")}
+      end
+
+      def check_if_outdated
+        if File.exist?(OLD_CONFIG_FILE) && !File.exist?(CONFIG_FILE)
+          FileUtils.move(OLD_CONFIG_FILE, CONFIG_FILE)
+          puts "Stagecoach config is now at #{CONFIG_FILE}"
+        end
       end
 
       def open
@@ -44,7 +52,8 @@ module Stagecoach
         # Create a config file if necessary 
         case STDIN.gets.chomp
         when 'C'
-        Config.new unless File.exist?(CONFIG_FILE) 
+          Config.check_if_outdated
+          Config.new unless File.exist?(CONFIG_FILE) 
         when 'Q'
           puts "Exiting..."
           exit
@@ -120,23 +129,39 @@ module Stagecoach
         # TODO Some verification of the input at this stage, for example test the
         # connection and have the user re-enter the details if necessary 
         # http://api.rubyonrails.org/classes/ActiveResource/Connection.html#method-i-head
-        loop do 
+        config = Config.yaml_to_hash
+        unless config["redmine_site"] && config["redmine_api_key"] && config["redmine_user_id"]
           CommandLine.line_break
           print "Enter your redmine/planio repository, eg. https://digitaleseiten.plan.io:  "
-          redmine_repo = STDIN.gets.chomp
+          redmine_site = STDIN.gets.chomp 
           print "Enter your API key for that repo:  "
           redmine_api_key = STDIN.gets.chomp
 
-          Config.save({"redmine_site" => redmine_repo, "redmine_api_key"  => redmine_api_key})
+          RedmineApi::Client.instance_eval do
+            self.site = config["redmine_site"] || redmine_site
+            self.user = config["redmine_api_key"] || redmine_api_key
+          end
+
+          all_users = Redmine.users
+
+          puts "ID    |  User Name"
+          all_users.each {|u| puts printf("%-5d",u.attributes["id"]).to_s + " | " + u.attributes["firstname"] + " " + u.attributes["lastname"]} rescue puts "This one"
+
+          puts "Which id is yours?"
+          user_id = STDIN.gets.chomp
+          Config.save({"redmine_site" => redmine_site, "redmine_api_key"  => redmine_api_key, "redmine_user_id" => user_id.to_i })
 
           CommandLine.line_break
           puts "Settings saved OK:"
-          puts "Repository: " + redmine_repo
-          puts "API Key:    " + redmine_api_key
+          puts "Repository: " + redmine_site if redmine_site
+          puts "API Key:    " + redmine_api_key if redmine_api_key
+          puts "User ID:    " + user_id if user_id
           CommandLine.line_break
           puts "Exiting..."
-          exit
         end 
+         
+        exit
+
       end 
     end
   end
