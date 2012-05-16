@@ -100,6 +100,10 @@ module Stagecoach
         `ghi -o "#{title}" -m "#{description}"`
       end
 
+      def assign_issue_to_me(issue_number)
+        `ghi assign #{issue_number}`
+      end
+
       def branch_has_commits?(branch)
         log = `git log --branches --not --remotes --simplify-by-decoration --decorate --oneline`
         if log.include? branch
