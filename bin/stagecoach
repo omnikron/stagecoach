@@ -102,7 +102,7 @@ module Stagecoach
         exit
       end
 
-      if redmine_issue.status.id != '1'
+      if redmine_issue.status.id != 1
         puts "Warning!".red
         puts "This issue is in status '#{redmine_issue.status.name}'"
         begin 
@@ -120,6 +120,7 @@ module Stagecoach
 
       # Set the redmine issue status to 'In Bearbeitung'
       redmine_issue.status_id = 2
+      redmine_issue.assigned_to_id = config["redmine_user_id"]
       redmine_issue.save
     end
 
@@ -199,6 +200,7 @@ module Stagecoach
       # Create a Git issue.
       github_issue =  Git.new_issue(redmine_issue.subject, body)
       github_issue_id = github_issue[/\d+/]
+      Git.assign_issue_to_me(github_issue_id)
 
       # Save it so we can reference it in commits using the magic of git hooks!
       config[Git.current_branch] = {:github_issue => github_issue_id, :redmine_issue => redmine_issue_number}
@@ -237,7 +239,7 @@ module Stagecoach
     unless Git.branch_has_commits?(branch)
       puts "You don't have any uncommitted changes on branch #{branch}."
       puts "If you have already pushed your changes, run:"
-      puts "stagecoach -d [deploy_branch]  - default is 'staging'"
+      puts "stagecoach -d [deploy_branch]"
       puts "Otherwise, go make some commits!"
       puts "#%s for help" % "stagecoach -h".green
       puts "Exiting..."
@@ -264,8 +266,6 @@ module Stagecoach
       end
     end
 
-    # TODO this needs removing if we implement the 'deploy to staging' stuff
-    # Stop anybody deploying master to staging...
     case branch
     when 'master', 'Master', 'staging', 'Staging' 
       puts "You can't use stagecoach to deploy your #{branch} branch.\nExiting..."
@@ -277,7 +277,7 @@ module Stagecoach
 
     puts "Push successful."  
     unless opts[:deploy_given]
-      "stagecoach -d [branch_name] to deploy (default is staging)."
+      "stagecoach -d [branch_name] to deploy."
       "exiting..."
       exit
     end
