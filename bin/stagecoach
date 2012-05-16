@@ -4,7 +4,8 @@ require File.dirname(__FILE__) + '/../lib/stagecoach.rb'
 
 module Stagecoach
   VERSION = File.open(File.dirname(__FILE__) + '/../VERSION').read
-  CONFIG_FILE = `pwd`.chomp + '/.stagecoach~'
+  CONFIG_FILE = `pwd`.chomp + '/.stagecoach'
+  OLD_CONFIG_FILE = `pwd`.chomp + '/.stagecoach~'
 
   # Command line options courtesy of the Trollop gem.
   opts = CommandLine.trollop

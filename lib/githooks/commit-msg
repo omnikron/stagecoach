@@ -30,7 +30,7 @@ end
 if gem_available?('redmine_stagecoach') == false
   exit
 else
-  config = YAML::load(File.open(File.dirname(__FILE__) + '/../../.stagecoach~', 'r'))
+  config = YAML::load(File.open(File.dirname(__FILE__) + '/../../.stagecoach', 'r'))
 end
 
 # Find out what branch we are on
