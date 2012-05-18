@@ -2,7 +2,7 @@ module Stagecoach
   class Git
     class << self
       def branches
-        `git branch`.split("\n")
+        `git branch`.split("\n").each {|a| a.lstrip! }
       end
       
       def global_config(header, config)
@@ -74,7 +74,12 @@ module Stagecoach
         Git.change_to_branch(to_branch)
         puts `git pull origin #{to_branch}`
         puts `git merge #{from_branch}`
-        raise 'merge failed' if $?.exitstatus != 0
+        begin
+          raise 'Merge failed' if $?.exitstatus != 0
+        rescue 
+          puts $!.class.name + ": " + $!.message      # $! refers to the last error object
+          puts "Please resolve the merge conflict and deploy again. Exiting..."
+        end
       end
 
       def push(branch)

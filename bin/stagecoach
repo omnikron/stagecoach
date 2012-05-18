@@ -56,13 +56,6 @@ module Stagecoach
     end
   end
 
-
-  # Set up redmine client config.
-  RedmineApi::Client.instance_eval do
-    self.site = config["redmine_site"]
-    self.user = config["redmine_api_key"]
-  end
-
   # Checks for uncommitted/unstashed changes and aborts if present.
   if Git.changes != ''
     puts "You have uncommitted changes:".red
@@ -72,9 +65,28 @@ module Stagecoach
     exit
   end 
 
+  
+  # ------------------------------------------------------------------
+  # Git branch operations: list, cleanup
+  # ------------------------------------------------------------------
+
+  if opts[:list]
+    puts "Local Git Branches created with Stagecoach:\n\n"
+    local_branches = {}
+    config.each { |k,v| local_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
+    local_branches.each { |k,v| puts k if Git.branches.include?(k) }
+    exit
+  end
+
   # ------------------------------------------------------------------
   # Initial stage - set up branch and git issue.
   # ------------------------------------------------------------------
+
+  # Set up redmine client config.
+  RedmineApi::Client.instance_eval do
+    self.site = config["redmine_site"]
+    self.user = config["redmine_api_key"]
+  end
 
   unless opts[:deploy] or opts[:push]
 
