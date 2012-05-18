@@ -97,7 +97,7 @@ module Stagecoach
       end
 
       def new_issue(title, description)
-        `ghi -o "#{title}" -m "#{description}"`
+        `ghi open -m "#{title}\n#{description}"`
       end
 
       def assign_issue_to_me(issue_number)
@@ -113,12 +113,8 @@ module Stagecoach
         end
       end
 
-      def view_issue(github_issue)
-        `ghi -u#{github_issue}`
-      end
-
       def issue(id)
-        `ghi -l #{id}`
+        `ghi list #{id}`
       end
     end
   end

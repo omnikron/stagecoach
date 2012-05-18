@@ -205,13 +205,6 @@ module Stagecoach
       # Save it so we can reference it in commits using the magic of git hooks!
       config[Git.current_branch] = {:github_issue => github_issue_id, :redmine_issue => redmine_issue_number}
 
-
-      print "Would you like to edit the issue on Github? [Y]es or anything else to continue:  "
-
-      if STDIN.gets.chomp == 'Y'
-        Git.view_issue(github_issue_id) 
-      else
-      end
     end
 
     # Github issues are easier.

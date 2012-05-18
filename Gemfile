@@ -1,7 +1,7 @@
 source "http://rubygems.org"
 
 gem 'activeresource'
-gem 'ghi', :git => 'git://github.com/stephencelis/ghi.git'
+gem 'ghi', ">= 0.9", :git => 'git://github.com/stephencelis/ghi.git'
 gem 'trollop'
 gem 'capistrano'
 
