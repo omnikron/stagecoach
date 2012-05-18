@@ -63,7 +63,6 @@ module Stagecoach
   if opts[:list]
     CommandLine.line_break
     puts "Local Git Branches created with Stagecoach:"
-    puts "%s = already merged into master" % "Green".green
     puts "%s = not merged into master" % "Red".red
     CommandLine.line_break
     local_stagecoach_branches = {}
@@ -74,7 +73,7 @@ module Stagecoach
       list = Git.branches
       list << Git.current_branch
       if list.include?(branch_name.strip) 
-        puts Git.branch_merged_to_master?(branch_name) ? branch_name.green : branch_name.red
+        puts Git.branch_merged_to_master?(branch_name) ? branch_name : branch_name.red
       end 
     end
     exit
