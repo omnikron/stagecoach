@@ -195,10 +195,10 @@ module Stagecoach
 
     # Issue handling.
     if opts[:github]
-      config[Git.current_branch] = {:github_issue => opts[:github]}
+      config[Git.current_branch] = {'github_issue' => opts[:github]}
       #TODO check that github issue is not assigned to somebody already
     elsif opts[:redmine]
-      config[Git.current_branch] = {:redmine_issue => redmine_issue_number}
+      config[Git.current_branch] = {'redmine_issue' => redmine_issue_number}
     end
 
     # Set up the related issue for this branch.
@@ -215,7 +215,7 @@ module Stagecoach
       Git.assign_issue_to_me(github_issue_id)
 
       # Save it so we can reference it in commits using the magic of git hooks!
-      config[Git.current_branch] = {:github_issue => github_issue_id, :redmine_issue => redmine_issue_number}
+      config[Git.current_branch] = {'github_issue' => github_issue_id, 'redmine_issue' => redmine_issue_number}
 
     end
 
