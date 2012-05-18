@@ -25,7 +25,7 @@ module Stagecoach
         # RedmineApi::Client.site + "/issues/" + issue.id
         #
         # but this caused URI merge errors on some setups.
-        "#{RedmineApi::Client.site}/issues/#{issue.id}"
+        "#{RedmineApi::Client.site}issues/#{issue.id}"
       end
 
       # Open the issue in a browser.

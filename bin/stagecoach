@@ -56,13 +56,6 @@ module Stagecoach
     end
   end
 
-
-  # Set up redmine client config.
-  RedmineApi::Client.instance_eval do
-    self.site = config["redmine_site"]
-    self.user = config["redmine_api_key"]
-  end
-
   # Checks for uncommitted/unstashed changes and aborts if present.
   if Git.changes != ''
     puts "You have uncommitted changes:".red
@@ -72,9 +65,38 @@ module Stagecoach
     exit
   end 
 
+  
+  # ------------------------------------------------------------------
+  # Git branch operations: list, cleanup
+  # ------------------------------------------------------------------
+
+  if opts[:list]
+    CommandLine.line_break
+    puts "Local Git Branches created with Stagecoach:"
+    puts "%s = already merged into master" % "Green".green
+    puts "%s = not merged into master" % "Red".red
+    CommandLine.line_break
+    local_stagecoach_branches = {}
+    config.each { |k,v| local_stagecoach_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
+    local_stagecoach_branches.keys.sort.each do |branch_name|
+      branch_attributes = local_stagecoach_branches[branch_name]
+
+      if Git.branches.select { |a| a.match(/\W+#{branch_name}/) } 
+        puts Git.branch_merged_to_master?(branch_name) ? branch_name.green : branch_name.red
+      end 
+    end
+    exit
+  end
+
   # ------------------------------------------------------------------
   # Initial stage - set up branch and git issue.
   # ------------------------------------------------------------------
+
+  # Set up redmine client config.
+  RedmineApi::Client.instance_eval do
+    self.site = config["redmine_site"]
+    self.user = config["redmine_api_key"]
+  end
 
   unless opts[:deploy] or opts[:push]
 
@@ -183,10 +205,10 @@ module Stagecoach
 
     # Issue handling.
     if opts[:github]
-      config[Git.current_branch] = {:github_issue => opts[:github]}
+      config[Git.current_branch] = {'github_issue' => opts[:github]}
       #TODO check that github issue is not assigned to somebody already
     elsif opts[:redmine]
-      config[Git.current_branch] = {:redmine_issue => redmine_issue_number}
+      config[Git.current_branch] = {'redmine_issue' => redmine_issue_number}
     end
 
     # Set up the related issue for this branch.
@@ -203,7 +225,7 @@ module Stagecoach
       Git.assign_issue_to_me(github_issue_id)
 
       # Save it so we can reference it in commits using the magic of git hooks!
-      config[Git.current_branch] = {:github_issue => github_issue_id, :redmine_issue => redmine_issue_number}
+      config[Git.current_branch] = {'github_issue' => github_issue_id, 'redmine_issue' => redmine_issue_number}
 
     end
 
