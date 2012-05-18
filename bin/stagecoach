@@ -293,11 +293,23 @@ module Stagecoach
     # Redmine issue to feedback status
     if redmine_issue_number =  config[from_branch][:redmine_issue]
       CommandLine.line_break
-      puts "Attempting to change Redmine ticket status to 'Feedback' for you:"
-      issue = Redmine.issue(redmine_issue_number)
-      issue.status_id = 4
-      issue.save
-      Redmine.view_issue(issue)
+      puts "Would you like to change your Redmine ticket status to [F]eedback or [E]rledigt? Leave blank to do nothing: "
+      case STDIN.gets.chomp
+      when 'F', 'f'
+        puts "Attempting to change Redmine ticket status to 'Feedback' for you..."
+        issue = Redmine.issue(redmine_issue_number)
+        issue.status_id = 4
+        issue.save
+        puts "Status set to 'Feedback'"
+      when 'E', 'e'
+        puts "Attempting to change Redmine ticket status to 'Erledigt' for you..."
+        issue = Redmine.issue(redmine_issue_number)
+        issue.status_id = 5
+        issue.save
+        puts "Status set to 'Erledigt'"
+      else
+      end
+        puts 'Completed deploy.'
     end
   end
 end
