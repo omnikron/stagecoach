@@ -2,7 +2,7 @@ module Stagecoach
   class Git
     class << self
       def branches
-        `git branch`.split("\n").each {|a| a.lstrip! }
+        `git branch`.split("\n").collect(&:strip)
       end
       
       def global_config(header, config)

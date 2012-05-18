@@ -55,16 +55,6 @@ module Stagecoach
       exit
     end
   end
-
-  # Checks for uncommitted/unstashed changes and aborts if present.
-  if Git.changes != ''
-    puts "You have uncommitted changes:".red
-    puts Git.changes
-    puts "Please commit or stash these changes before running Stagecoach. -h for help."
-    puts "Exiting..."
-    exit
-  end 
-
   
   # ------------------------------------------------------------------
   # Git branch operations: list, cleanup
@@ -78,10 +68,12 @@ module Stagecoach
     CommandLine.line_break
     local_stagecoach_branches = {}
     config.each { |k,v| local_stagecoach_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
-    local_stagecoach_branches.keys.sort.each do |branch_name|
-      branch_attributes = local_stagecoach_branches[branch_name]
 
-      if Git.branches.select { |a| a.match(/\W+#{branch_name}/) } 
+    local_stagecoach_branches.keys.sort.each do |branch_name|
+      # branch_attributes = local_stagecoach_branches[branch_name]
+      list = Git.branches
+      list << Git.current_branch
+      if list.include?(branch_name.strip) 
         puts Git.branch_merged_to_master?(branch_name) ? branch_name.green : branch_name.red
       end 
     end
@@ -91,6 +83,15 @@ module Stagecoach
   # ------------------------------------------------------------------
   # Initial stage - set up branch and git issue.
   # ------------------------------------------------------------------
+
+  # Checks for uncommitted/unstashed changes and aborts if present.
+  if Git.changes != ''
+    puts "You have uncommitted changes:".red
+    puts Git.changes
+    puts "Please commit or stash these changes before running Stagecoach. -h for help."
+    puts "Exiting..."
+    exit
+  end 
 
   # Set up redmine client config.
   RedmineApi::Client.instance_eval do
@@ -331,7 +332,7 @@ module Stagecoach
         puts "Status set to 'Erledigt'"
       else
       end
-        puts 'Completed deploy.'
+      puts 'Completed deploy.'
     end
   end
 end
