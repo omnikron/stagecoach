@@ -71,10 +71,20 @@ module Stagecoach
   # ------------------------------------------------------------------
 
   if opts[:list]
-    puts "Local Git Branches created with Stagecoach:\n\n"
-    local_branches = {}
-    config.each { |k,v| local_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
-    local_branches.each { |k,v| puts k if Git.branches.include?(k) }
+    CommandLine.line_break
+    puts "Local Git Branches created with Stagecoach:"
+    puts "%s = already merged into master" % "Green".green
+    puts "%s = not merged into master" % "Red".red
+    CommandLine.line_break
+    local_stagecoach_branches = {}
+    config.each { |k,v| local_stagecoach_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
+    local_stagecoach_branches.keys.sort.each do |branch_name|
+      branch_attributes = local_stagecoach_branches[branch_name]
+
+      if Git.branches.select { |a| a.match(/\W+#{branch_name}/) } 
+        puts Git.branch_merged_to_master?(branch_name) ? branch_name.green : branch_name.red
+      end 
+    end
     exit
   end
 

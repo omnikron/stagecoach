@@ -29,6 +29,13 @@ module Stagecoach
         end
       end
 
+      def branch_merged_to_master?(branch)
+         list = `git branch --merged`.split("\n").collect(&:strip)
+         list << Git.current_branch
+         list.include?(branch.strip)
+      end
+
+
       def correct_branch?
         CommandLine.line_break
         print "You are currently in local branch: #{Git.current_branch.red} \nAre these details correct? ([Y]es or [Q]uit):  "
