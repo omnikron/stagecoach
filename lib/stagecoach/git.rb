@@ -31,14 +31,18 @@ module Stagecoach
 
       def tidy(deletable_branches)
         CommandLine.line_break
-        puts "All branches that have been merged into master will be deleted locally and remotely."
-        print "Continue? [Y]es or anything else to cancel: "
-        case STDIN.gets.chomp
-        when 'Y'
-          erase(deletable_branches) if deletable_branches.length > 0
+        if deletable_branches.length > 0
+          puts "All branches that have been merged into master will be deleted locally and remotely.".red
+          print "Continue? [Y]es or anything else to cancel: "
+          case STDIN.gets.chomp
+          when 'Y' 
+            erase(deletable_branches) 
+          else
+            puts 'No branches deleted.  Exiting...'
+            exit
+          end
         else
-          puts 'No branches deleted.  Exiting...'
-          exit
+          puts 'No branches to delete.  Exiting...'
         end
       end
 
