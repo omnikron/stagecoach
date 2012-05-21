@@ -51,10 +51,10 @@ module Stagecoach
 
         # Create a config file if necessary 
         case STDIN.gets.chomp
-        when 'C'
+        when /c/i
           Config.check_if_outdated
           Config.new unless File.exist?(CONFIG_FILE) 
-        when 'Q'
+        when /q/i
           puts "Exiting..."
           exit
         end
@@ -98,7 +98,7 @@ module Stagecoach
         print "[I]nstall or [S]kip this step:  "
         loop do
           case STDIN.gets.chomp
-          when 'I'
+          when /i/i
             if File.exist?(install_dir + git_hook)
               case FileUtils.compare_file(source_dir + git_hook, install_dir + git_hook) 
               when true
@@ -106,9 +106,9 @@ module Stagecoach
                 break
               when false
                 puts "You have a commit-msg githook already.  Are you sure you want to install?  This will #{'overwrite'.red} your current commit-msg githook."
-                print "Type [overwrite] to continue or anything else to skip installation:  "
+                print "[O]K or anything else to skip installation:  "
                 case STDIN.gets.chomp
-                when 'overwrite'
+                when /o/i
                   Config.githook_install(source_dir, install_dir, git_hook)
                   break
                 else
@@ -120,7 +120,7 @@ module Stagecoach
               Config.githook_install(source_dir, install_dir, git_hook)
               break
             end
-          when 'S'
+          when /s/i
             puts 'Skipping Installation.'
             break
           end
