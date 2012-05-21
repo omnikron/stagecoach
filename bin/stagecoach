@@ -41,8 +41,8 @@ module Stagecoach
   # Checks validity of argument variables.
   # Ignore these checks with -t flag.
   unless opts[:testing_given] 
-    Config.setup if config["redmine_site"] == "none"
-    Config.setup if config["redmine_api"]  == "none"
+    Config.setup unless config["redmine_site"] == "none"
+    Config.setup unless config["redmine_api"] == "none"
 
     # Checks that command-line args are present and correct.
     Trollop::die :redmine, "issue number can only contain digits" if opts[:redmine] && opts[:redmine][/\D/]
@@ -99,7 +99,7 @@ module Stagecoach
     self.user = config["redmine_api_key"]
   end
 
-  unless opts[:deploy] or opts[:push]
+  unless opts[:deploy_given] or opts[:push]
 
     # If no issue argument has been given.
     if opts[:github].nil? && opts[:redmine].nil?
@@ -293,8 +293,8 @@ module Stagecoach
 
     puts "Push successful."  
     unless opts[:deploy_given]
-      "stagecoach -d [branch_name] to deploy."
-      "exiting..."
+      puts "stagecoach -d [branch_name] to deploy."
+      puts "Exiting..."
       exit
     end
   end

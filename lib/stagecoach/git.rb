@@ -39,11 +39,11 @@ module Stagecoach
             erase(deletable_branches) 
           else
             puts 'No branches deleted.  Exiting...'
-            exit
           end
         else
           puts 'No branches to delete.  Exiting...'
         end
+        exit
       end
 
       def remote_branches

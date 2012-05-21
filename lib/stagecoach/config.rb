@@ -157,9 +157,9 @@ module Stagecoach
           puts "API Key:    " + redmine_api_key if redmine_api_key
           puts "User ID:    " + user_id if user_id
           CommandLine.line_break
-          puts "Exiting..."
         end 
-         
+
+        puts "Complete! Exiting..."
         exit
 
       end 
