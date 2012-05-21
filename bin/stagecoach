@@ -57,29 +57,30 @@ module Stagecoach
   end
   
   # ------------------------------------------------------------------
-  # Git branch operations: list, cleanup
+  # Git branch operations: list, tidy
   # ------------------------------------------------------------------
 
-  if opts[:list]
+  if opts[:list] || opts[:tidy]
     CommandLine.line_break
-    puts "Local Git Branches created with Stagecoach:"
-    puts "%s = not merged into master" % "Red".red
-    CommandLine.line_break
-    local_stagecoach_branches = {}
-    config.each { |k,v| local_stagecoach_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id/}
+    puts "-------------------------------------------"
+    puts "Local Git Branches created with Stagecoach "
+    puts "-------------------------------------------"
 
-    local_stagecoach_branches.keys.sort.each do |branch_name|
-      # branch_attributes = local_stagecoach_branches[branch_name]
-      list = Git.branches
-      list << Git.current_branch
-      if list.include?(branch_name.strip) 
-        puts Git.branch_merged_to_master?(branch_name) ? branch_name : branch_name.red
-      end 
+    local_stagecoach_branches = Git.local_stagecoach_branches(config)
+
+    all_branches_list = Git.branches
+    all_branches_list << Git.current_branch
+
+    deletable_branches = Git.list(local_stagecoach_branches, all_branches_list)
+
+    if opts[:tidy]
+      Git.tidy(deletable_branches)
     end
+    puts "Complete!  Exiting..."
     exit
   end
 
-  # ------------------------------------------------------------------
+ # ------------------------------------------------------------------
   # Initial stage - set up branch and git issue.
   # ------------------------------------------------------------------
 

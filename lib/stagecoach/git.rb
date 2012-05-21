@@ -5,6 +5,60 @@ module Stagecoach
         `git branch`.split("\n").collect(&:strip)
       end
       
+      def list(local_stagecoach_branches, all_branches_list)
+        deletable_branches = []
+        local_stagecoach_branches.keys.sort.each do |branch_name|
+          # branch_attributes = local_stagecoach_branches[branch_name]
+          if all_branches_list.include?(branch_name.strip)
+            if Git.branch_merged_to_master?(branch_name) 
+              puts branch_name 
+              deletable_branches << branch_name
+            else
+             puts branch_name + " *".green
+            end
+          end 
+        end
+        CommandLine.line_break
+        puts "*".green + " = not merged to master, will not be deleted by stagecoach -t"
+        CommandLine.line_break
+        deletable_branches
+      end
+
+      def local_stagecoach_branches(config)
+        local_stagecoach_branches = {}
+        config.each { |k,v| local_stagecoach_branches[k] = v unless k =~ /redmine_site|redmine_api_key|redmine_user_id|master|staging/i}
+      end
+
+      def tidy(deletable_branches)
+        CommandLine.line_break
+        puts "All branches that have been merged into master will be deleted locally and remotely."
+        print "Continue? [Y]es or anything else to cancel: "
+        case STDIN.gets.chomp
+        when 'Y'
+          erase(deletable_branches) if deletable_branches.length > 0
+        else
+          puts 'No branches deleted.  Exiting...'
+          exit
+        end
+      end
+
+      def remote_branches
+        (`git ls-remote`.split(" ").each.select { |e| e =~ /refs\/heads/}).collect {|a| a.gsub("refs/heads/", "")}
+      end
+
+      def erase(list)
+        change_to_branch('master')
+        branches_on_remote = Git.remote_branches
+        list.each {|b| delete_branch(b, branches_on_remote ) }
+      end
+
+      def delete_branch(branch, list)
+        puts "Local: " + `git branch -D #{branch}`
+        if list.include?(branch)
+          puts "Remote: " + `git push origin :#{branch}`
+        end
+      end
+
       def global_config(header, config)
         `git config --global #{header}.#{config}`
       end
