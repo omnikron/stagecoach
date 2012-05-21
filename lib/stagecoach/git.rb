@@ -19,7 +19,7 @@ module Stagecoach
           end 
         end
         CommandLine.line_break
-        puts "*".red + " = merged to master, can be deleted by stagecoach -t"
+        puts "*".red + " = merged to master, can be deleted by stagecoach -t" if deletable_branches.length > 0
         CommandLine.line_break
         deletable_branches
       end
