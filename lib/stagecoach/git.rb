@@ -11,15 +11,15 @@ module Stagecoach
           # branch_attributes = local_stagecoach_branches[branch_name]
           if all_branches_list.include?(branch_name.strip)
             if Git.branch_merged_to_master?(branch_name) 
-              puts branch_name 
+              puts branch_name  + " *".red
               deletable_branches << branch_name
             else
-             puts branch_name + " *".green
+             puts branch_name
             end
           end 
         end
         CommandLine.line_break
-        puts "*".green + " = not merged to master, will not be deleted by stagecoach -t"
+        puts "*".red + " = merged to master, can be deleted by stagecoach -t"
         CommandLine.line_break
         deletable_branches
       end
