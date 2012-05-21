@@ -105,10 +105,10 @@ module Stagecoach
     if opts[:github].nil? && opts[:redmine].nil?
       print "Are you working on a [R]edmine or a [G]ithub issue:  "
       case STDIN.gets.chomp
-      when 'R'
+      when /r/i
         print "Please enter your Redmine issue number:  "
         opts[:redmine] = gets.chomp
-      when 'G'
+      when /g/i
         print "Please enter your Github issue number:  "
         opts[:github] = gets.chomp
       end
@@ -126,7 +126,6 @@ module Stagecoach
       end
 
       if redmine_issue.status.id != 1
-        puts "Warning!".red
         puts "This issue is in status '#{redmine_issue.status.name}'"
         begin 
           puts "It is assigned to #{redmine_issue.assigned_to.name}"
@@ -135,8 +134,8 @@ module Stagecoach
         end
         print "Continue? [Y]es or [Q]uit:  "
         case STDIN.gets.chomp
-        when 'Y'
-        when 'Q'  
+        when /Y/i
+        when /Q/i  
           exit
         end
       end
@@ -192,9 +191,9 @@ module Stagecoach
         exit
       end
       case STDIN.gets.chomp
-      when 'U'
+      when /u/i
         Git.change_to_branch(new_branch)
-      when 'Q'
+      when /q/i
         exit
       end
     else
@@ -272,9 +271,9 @@ module Stagecoach
       print " or "
       print "[anything else] to cancel:  ".green
       case STDIN.gets.chomp
-      when "D"
+      when /p/i
         CommandLine.line_break
-        puts "DEPLOYING:"
+        puts "Pushing:"
         CommandLine.line_break
       else 
         puts "Exiting..."
@@ -283,8 +282,8 @@ module Stagecoach
     end
 
     case branch
-    when 'master', 'Master', 'staging', 'Staging' 
-      puts "You can't use stagecoach to deploy your #{branch} branch.\nExiting..."
+    when /master/i 
+      puts "You can't use stagecoach to push your #{branch} branch.\nExiting..."
       exit
     end
 
@@ -309,8 +308,11 @@ module Stagecoach
     from_branch = Git.current_branch
     to_branch = opts[:deploy]
 
-    Git.merge(to_branch, from_branch)
-    Git.push(to_branch)
+    unless to_branch =~ /master/i
+      Git.merge(to_branch, from_branch)
+      Git.push(to_branch)
+    end
+
     Capistrano.deploy(to_branch)
 
     # Redmine issue to feedback status
@@ -318,7 +320,7 @@ module Stagecoach
       CommandLine.line_break
       puts "Would you like to change your Redmine ticket status to [F]eedback or [E]rledigt? Leave blank to do nothing: "
       case STDIN.gets.chomp
-      when 'F', 'f'
+      when /f/i
         puts "Attempting to change Redmine ticket status to 'Feedback' for you..."
         issue = Redmine.issue(redmine_issue_number)
         issue.status_id = 4

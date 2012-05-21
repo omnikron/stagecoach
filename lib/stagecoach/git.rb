@@ -35,7 +35,7 @@ module Stagecoach
           puts "All branches that have been merged into master will be deleted locally and remotely.".red
           print "Continue? [Y]es or anything else to cancel: "
           case STDIN.gets.chomp
-          when 'Y' 
+          when /y/i 
             erase(deletable_branches) 
           else
             puts 'No branches deleted.  Exiting...'
@@ -99,8 +99,8 @@ module Stagecoach
         CommandLine.line_break
         print "You are currently in local branch: #{Git.current_branch.red} \nAre these details correct? ([Y]es or [Q]uit):  "
         case STDIN.gets.chomp
-        when "Y"
-        when "Q"
+        when /y/i
+        when /q/i
           exit
         else
           puts "Please enter Y to continue or Q to quit."
@@ -120,9 +120,9 @@ module Stagecoach
         else
           print "Branch '#{branch}' does not exist. [C]reate or [Q]uit:  "
           case STDIN.gets.chomp
-          when 'C'
+          when /c/i
             new_branch(branch)
-          when 'Q'     
+          when /q/i     
             exit
           end
         end
