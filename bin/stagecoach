@@ -41,8 +41,8 @@ module Stagecoach
   # Checks validity of argument variables.
   # Ignore these checks with -t flag.
   unless opts[:testing_given] 
-    Config.setup unless config["redmine_site"] == "none"
-    Config.setup unless config["redmine_api"] == "none"
+    Config.setup if config["redmine_site"] == "none"
+    Config.setup if config["redmine_api"] == "none"
 
     # Checks that command-line args are present and correct.
     Trollop::die :redmine, "issue number can only contain digits" if opts[:redmine] && opts[:redmine][/\D/]
