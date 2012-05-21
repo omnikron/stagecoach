@@ -59,7 +59,8 @@ module Stagecoach
       def delete_branch(branch, list)
         puts "Local: " + `git branch -D #{branch}`
         if list.include?(branch)
-          puts "Remote: " + `git push origin :#{branch}`
+          puts "Remote: "
+          puts `git push origin :#{branch}`
         end
       end
 
