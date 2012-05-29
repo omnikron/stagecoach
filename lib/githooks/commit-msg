@@ -62,7 +62,7 @@ NO_REFERENCE_FLAGS = [ NOREF, UP_NOREF, CAPS_NOREF  ]
 CLOSING_FLAGS = [ CLOSE, UP_CLOSE, CAPS_CLOSE ]
 
 begin
-ticket_number = config[current_branch][:github_issue]
+ticket_number = config[current_branch][:github_issue] || config[current_branch]['github_issue']
 rescue
   exit
 end
