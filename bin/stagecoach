@@ -316,7 +316,7 @@ module Stagecoach
     Capistrano.deploy(to_branch)
 
     # Redmine issue to feedback status
-    if redmine_issue_number =  config[from_branch][:redmine_issue] rescue puts "Completed Deploy!"; exit
+    if redmine_issue_number =  config[from_branch][:redmine_issue] rescue abort("Completed Deploy!")
       CommandLine.line_break
       puts "Would you like to change your Redmine ticket status to [F]eedback or [E]rledigt? Leave blank to do nothing: "
       case STDIN.gets.chomp
