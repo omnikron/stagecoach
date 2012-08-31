@@ -165,7 +165,7 @@ module Stagecoach
       end
     end
 
-    # Check that the pivotal tracker story is not already assigned.
+    # Check that the pivotal tracker exists
     if opts[:story]
       pivotal_tracker_story_id = opts[:story]
       begin
@@ -176,17 +176,19 @@ module Stagecoach
         exit
       end
 
-      if redmine_issue.status.id != 1
-        puts "This issue is in status '#{redmine_issue.status.name}'"
-        begin
-          puts "It is assigned to #{redmine_issue.assigned_to.name}"
-        rescue
+      # And check that it is definitely the right one
+      if pivotal_tracker_story.current_state != "unstarted"
+        puts "This issue is in status '#{pivotal_tracker_story.current_state}'"
+        if pivotal_tracker_story.owned_by.empty?
           puts "But it is not assigned to anybody yet."
+        else
+          puts "It is assigned to #{pivotal_tracker_story.owned_by}"
         end
+
         print "Continue? [Y]es or [Q]uit:  "
         case STDIN.gets.chomp
-        when /Y/i
-        when /Q/i
+        when /^Y/i
+        when /^Q/i
           exit
         end
       end
