@@ -4,19 +4,19 @@ module Stagecoach
       def branches
         `git branch`.split("\n").collect(&:strip)
       end
-      
+
       def list(local_stagecoach_branches, all_branches_list)
         deletable_branches = []
         local_stagecoach_branches.keys.sort.each do |branch_name|
           # branch_attributes = local_stagecoach_branches[branch_name]
           if all_branches_list.include?(branch_name.strip)
-            if Git.branch_merged_to_master?(branch_name) 
+            if Git.branch_merged_to_master?(branch_name)
               puts branch_name  + " *".red
               deletable_branches << branch_name
             else
              puts branch_name
             end
-          end 
+          end
         end
         CommandLine.line_break
         puts "*".red + " = merged to master, can be deleted by stagecoach -t" if deletable_branches.length > 0
@@ -35,13 +35,13 @@ module Stagecoach
           puts "All branches that have been merged into master will be deleted locally and remotely.".red
           print "Continue? [Y]es or anything else to cancel: "
           case STDIN.gets.chomp
-          when /y/i 
-            erase(deletable_branches) 
+          when /^y/i
+            erase(deletable_branches)
           else
             puts 'No branches deleted.  Exiting...'
           end
         else
-          puts 'No branches to delete.  Exiting...'
+          puts 'No fully-merged branches found.  Exiting without doing anything.'
         end
         exit
       end
@@ -75,13 +75,13 @@ module Stagecoach
       def changes
         `git diff-files --name-status -r --ignore-submodules`
       end
-      
+
       def status
         `git status`
       end
 
       def current_branch
-        branches.each do |b| 
+        branches.each do |b|
           if b =~ /\*/
             return b[1..-1].strip
           end
@@ -89,9 +89,8 @@ module Stagecoach
       end
 
       def branch_merged_to_master?(branch)
-         list = `git branch --merged`.split("\n").collect(&:strip)
-         list << Git.current_branch
-         list.include?(branch.strip)
+         @list ||= `git branch --merged master`.split("\n").collect(&:strip)
+         @list.include?(branch.strip)
       end
 
 
@@ -122,7 +121,7 @@ module Stagecoach
           case STDIN.gets.chomp
           when /c/i
             new_branch(branch)
-          when /q/i     
+          when /q/i
             exit
           end
         end
@@ -142,7 +141,7 @@ module Stagecoach
         puts `git merge #{from_branch}`
         begin
           raise 'Merge failed' if $?.exitstatus != 0
-        rescue 
+        rescue
           puts $!.class.name + ": " + $!.message      # $! refers to the last error object
           puts "Please resolve the merge conflict and deploy again. Exiting..."
         end
@@ -155,7 +154,7 @@ module Stagecoach
       end
 
 
-      def checkout(branch) 
+      def checkout(branch)
         puts `git checkout #{branch}`
       end
 

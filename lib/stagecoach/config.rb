@@ -7,7 +7,21 @@ module Stagecoach
   class Config
     class << self
       def new
-        File.open(CONFIG_FILE, 'w') { |f| f.write("---\nredmine_site: \nredmine_api_key: \nredmine_user_id:")}
+        File.open(CONFIG_FILE, 'w')
+      end
+
+      def open
+        File.open(CONFIG_FILE, 'r+')
+      end
+
+      def yaml_to_hash
+        YAML::load(Config.open) || {}
+      end
+
+      def save(hash, config_file = Config.open)
+        original = yaml_to_hash
+        updated = yaml_to_hash.merge(hash).to_yaml
+        config_file.write(updated)
       end
 
       def check_if_outdated
@@ -15,18 +29,6 @@ module Stagecoach
           FileUtils.move(OLD_CONFIG_FILE, CONFIG_FILE)
           puts "Stagecoach config is now at #{CONFIG_FILE}"
         end
-      end
-
-      def open
-        File.open(CONFIG_FILE, 'r+')
-      end
-
-      def yaml_to_hash 
-        YAML::load(Config.open)
-      end
-
-      def save(hash, config_file = Config.open)
-        config_file.write(hash.to_yaml)
       end
 
       def githook_install(source_dir, install_dir, file)
@@ -44,16 +46,16 @@ module Stagecoach
         CommandLine.line_break
 
         # Now scare everybody away again
-        puts "You are running stagecoach from #{FileUtils.pwd.green}. Is this the root directory of your repository?" 
+        puts "You are running stagecoach from #{FileUtils.pwd.green}. Is this the root directory of your repository?"
         puts "Stagecoach may not work properly anywhere else! So proceed with caution"
         CommandLine.line_break
         print "[C]ontinue or [Q]uit:  "
 
-        # Create a config file if necessary 
+        # Create a config file if necessary
         case STDIN.gets.chomp
         when /c/i
           Config.check_if_outdated
-          Config.new unless File.exist?(CONFIG_FILE) 
+          Config.new unless File.exist?(CONFIG_FILE)
         when /q/i
           puts "Exiting..."
           exit
@@ -63,12 +65,13 @@ module Stagecoach
         loop do
           if Git.global_config(:github, :user) == ""
             print "Please enter your github username:  "
-            case STDIN.gets.chomp
+            username = STDIN.gets.chomp
+            case username
             when ""
               print "Github user can't be blank, please try again:"
               redo
             else
-              Git.set_global_config(:github, :user, $_.chomp)           # $_ means the last STDIN. 
+              Git.set_global_config(:github, :user, username)
             end
           end
 
@@ -88,7 +91,7 @@ module Stagecoach
         # Install the commit-msg githook if it is not already there:
         source_dir = (File.dirname(__FILE__) + '/../githooks/')
         install_dir = FileUtils.pwd + '/.git/hooks/'
-        git_hook = 'commit-msg'  
+        git_hook = 'commit-msg'
 
         CommandLine.line_break
         puts "Would you like to install the stagecoach #{"commit-msg githook".green}?"
@@ -100,7 +103,7 @@ module Stagecoach
           case STDIN.gets.chomp
           when /i/i
             if File.exist?(install_dir + git_hook)
-              case FileUtils.compare_file(source_dir + git_hook, install_dir + git_hook) 
+              case FileUtils.compare_file(source_dir + git_hook, install_dir + git_hook)
               when true
                 puts 'The stagecoach githook is already installed in this repo. Skipping this step...'
                 break
@@ -126,43 +129,17 @@ module Stagecoach
           end
         end
 
-        # TODO Some verification of the input at this stage, for example test the
-        # connection and have the user re-enter the details if necessary 
-        # http://api.rubyonrails.org/classes/ActiveResource/Connection.html#method-i-head
-        config = Config.yaml_to_hash
-        unless config["redmine_site"] && config["redmine_api_key"] && config["redmine_user_id"]
-          CommandLine.line_break
-          print "Enter your redmine/planio repository, eg. https://digitaleseiten.plan.io:  "
-          redmine_site = STDIN.gets.chomp 
-          print "Enter your API key for that repo:  "
-          redmine_api_key = STDIN.gets.chomp
+        if not yaml_to_hash[:CONFIG_pivotal_tracker_api_token]
+          print "Enter your Pivotal Tracker API token: "
+          token = STDIN.gets.chomp
+          save('CONFIG_pivotal_tracker_api_token' => token)
+        end
 
-          RedmineApi::Client.instance_eval do
-            self.site = config["redmine_site"] || redmine_site
-            self.user = config["redmine_api_key"] || redmine_api_key
-          end
-
-          all_users = Redmine.users
-
-          puts "ID    |  User Name"
-          all_users.each {|u| puts printf("%-5d",u.attributes["id"]).to_s + " | " + u.attributes["firstname"] + " " + u.attributes["lastname"]} rescue puts "This one"
-
-          puts "Which id is yours?"
-          user_id = STDIN.gets.chomp
-          Config.save({"redmine_site" => redmine_site, "redmine_api_key"  => redmine_api_key, "redmine_user_id" => user_id.to_i })
-
-          CommandLine.line_break
-          puts "Settings saved OK:"
-          puts "Repository: " + redmine_site if redmine_site
-          puts "API Key:    " + redmine_api_key if redmine_api_key
-          puts "User ID:    " + user_id if user_id
-          CommandLine.line_break
-        end 
 
         puts "Complete! Exiting..."
         exit
 
-      end 
+      end
     end
   end
 end

@@ -2,6 +2,7 @@ source "http://rubygems.org"
 
 gem 'activeresource'
 gem 'ghi', "~> 0.9.0.dev1"#, :git => 'git://github.com/stephencelis/ghi.git'
+gem 'pivotal-tracker'
 gem 'trollop'
 gem 'capistrano'
 

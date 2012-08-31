@@ -22,13 +22,13 @@ module Stagecoach
     exit
   end
 
-  
+
   # Initial setup with -s flag.
   if opts[:setup]
     Config.setup
   end
 
-  
+
   # Initial setup without -s flag.
   unless File.exist?(CONFIG_FILE)
     puts "No .stagecoach file present, running initial setup."
@@ -36,26 +36,81 @@ module Stagecoach
   end
 
   # Load config file to a hash.
-  config = Config.yaml_to_hash
+  config = Config.yaml_to_hash.with_indifferent_access
 
-  # Checks validity of argument variables.
-  # Ignore these checks with -t flag.
-  unless opts[:testing_given] 
-    Config.setup if config["redmine_site"] == "none"
-    Config.setup if config["redmine_api"] == "none"
+  # Checks that command-line args are present and correct.
+  Trollop::die :branch, "name must be longer than 1 character" if opts[:branch] && opts[:branch].length <= 1
 
-    # Checks that command-line args are present and correct.
-    Trollop::die :redmine, "issue number can only contain digits" if opts[:redmine] && opts[:redmine][/\D/]
-    Trollop::die :github, "issue number can only contain digits" if opts[:github] && opts[:github][/\D/]
-    Trollop::die :branch, "name must be longer than 1 character" if opts[:branch] && opts[:branch].length <= 1
 
-    # You can't give a redmine and a github issue number (for the moment)
-    if opts[:github] && opts[:redmine]
-      puts "You can't enter a github issue at the same time as a redmine issue at the moment.  Make up your mind!\nExiting..."
+  # ------------------------------------------------------------------
+  # Pivotal Tracker setup
+  # ------------------------------------------------------------------
+
+  # Check for pivotal tracker API token in .stagecoach
+  if not token = config[:CONFIG_pivotal_tracker_api_token]
+    puts "No Pivotal Tracker API token available. "
+    print "Enter your API token to continue or hit enter to quit: "
+    token = STDIN.gets.chomp
+    if token == ''
+      puts "Exiting..."
       exit
+    elsif token.length < 5
+      puts "Input not long enough for a Pivotal Tracker API token.".red
+      puts "Exiting..."
+      exit
+    else
+      Config.save('CONFIG_pivotal_tracker_api_token' => token)
     end
   end
-  
+
+  # Set Pivotal Tracker api token for this session
+  PivotalTracker::Client.token = token
+
+  # Set Pivotal Tracker project for this repository
+  if not project = config[:CONFIG_pivotal_tracker_project]
+    puts "No Pivotal Tracker project set for this repository."
+
+    projects = {}
+    PivotalTracker::Project.all.collect.with_index {|p, i| projects[i + 1] = p }
+
+    CommandLine.line_break
+    puts "Available projects:"
+    projects.each {|key, project| print "[#{key.to_s.green}]"; puts ": " + project.name}
+
+    CommandLine.line_break
+    print "Choose your project: "
+    loop do
+      CommandLine.line_break
+      input = STDIN.gets.chomp
+
+      if input.to_i && chosen_project = projects[input.to_i]
+        Config.save('CONFIG_pivotal_tracker_project' => chosen_project.id)
+        config = Config.yaml_to_hash.with_indifferent_access
+        puts "Chosen project '#{chosen_project.name}' saved to .stagecoach file"
+        CommandLine.line_break
+      else
+        print "Invalid entry.  Valid options #{projects.keys}:"
+        redo
+      end
+      break
+    end
+  end
+
+  # ------------------------------------------------------------------
+  # Welcome Message
+  # ------------------------------------------------------------------
+  if @pivotal_project = PivotalTracker::Project.find(config[:CONFIG_pivotal_tracker_project])
+    CommandLine.line_break
+    puts "Stagecoach connected to '#{@pivotal_project.name.green}' on Pivotal Tracker"
+    CommandLine.line_break
+  else
+    puts "Could not connect to your Pivotal Tracker project"
+    puts "Please check your API key and project ID in your .stagecoach file"
+    puts "Exiting..."
+    exit
+  end
+
+
   # ------------------------------------------------------------------
   # Git branch operations: list, tidy
   # ------------------------------------------------------------------
@@ -80,7 +135,7 @@ module Stagecoach
     exit
   end
 
- # ------------------------------------------------------------------
+  # ------------------------------------------------------------------
   # Initial stage - set up branch and git issue.
   # ------------------------------------------------------------------
 
@@ -91,35 +146,31 @@ module Stagecoach
     puts "Please commit or stash these changes before running Stagecoach. -h for help."
     puts "Exiting..."
     exit
-  end 
-
-  # Set up redmine client config.
-  RedmineApi::Client.instance_eval do
-    self.site = config["redmine_site"]
-    self.user = config["redmine_api_key"]
   end
+
 
   unless opts[:deploy_given] or opts[:push]
 
+    # TODO make this for Pivotal Tracker instead
     # If no issue argument has been given.
-    if opts[:github].nil? && opts[:redmine].nil?
-      print "Are you working on a [R]edmine or a [G]ithub issue:  "
+    if opts[:github].nil? && opts[:story].nil?
+      print "Are you working on a pivotal tracker [S]tory or a [G]ithub issue:  "
       case STDIN.gets.chomp
-      when /r/i
-        print "Please enter your Redmine issue number:  "
-        opts[:redmine] = gets.chomp
-      when /g/i
+      when /^s/i
+        print "Please enter your Pivotal Tracker Story id:  "
+        opts[:story] = gets.chomp
+      when /^g/i
         print "Please enter your Github issue number:  "
         opts[:github] = gets.chomp
       end
     end
 
-    # Check that the redmine issue is not already assigned.
-    if opts[:redmine]
-      redmine_issue_number = opts[:redmine]
+    # Check that the pivotal tracker story is not already assigned.
+    if opts[:story]
+      pivotal_tracker_story_id = opts[:story]
       begin
-        puts "Searching for issue number #{redmine_issue_number}..."
-        redmine_issue = Redmine.issue(redmine_issue_number)
+        puts "Searching for story number #{pivotal_tracker_story_id}..."
+        pivotal_tracker_story = @pivotal_project.stories.find(pivotal_tracker_story_id)
       rescue ActiveResource::ResourceNotFound => e
         puts e.message
         exit
@@ -127,22 +178,22 @@ module Stagecoach
 
       if redmine_issue.status.id != 1
         puts "This issue is in status '#{redmine_issue.status.name}'"
-        begin 
+        begin
           puts "It is assigned to #{redmine_issue.assigned_to.name}"
         rescue
-          puts "But it is not assigned to anybody yet." 
+          puts "But it is not assigned to anybody yet."
         end
         print "Continue? [Y]es or [Q]uit:  "
         case STDIN.gets.chomp
         when /Y/i
-        when /Q/i  
+        when /Q/i
           exit
         end
       end
 
       # Set the redmine issue status to 'In Bearbeitung'
       redmine_issue.status_id = 2
-      redmine_issue.assigned_to_id = config["redmine_user_id"]
+      redmine_issue.assigned_to_id = config[:redmine_user_id]
       redmine_issue.save
     end
 
@@ -152,7 +203,7 @@ module Stagecoach
     puts "Stagecoach: initial stage"
 
     # Change to from branch, pull changes, and create a new branch.
-    CommandLine.line_break  
+    CommandLine.line_break
     puts "Switching to #{original_branch} branch"
     #
     # TODO if there is a file that has been git added but not git committed, it
@@ -164,30 +215,27 @@ module Stagecoach
     Git.pull(original_branch)
     if opts[:branch_given]
       new_branch = opts[:branch]
-    else  
-      print "Please enter a new git branch name for your changes (branch will be created):  "
+      # Check that the new branch isn't master, because that would be silly
+      case new_branch
+      when /master/i
+        puts "You can't use stagecoach to deploy your master branch.\nExiting..."
+        exit
+      end
+    else
+      print "Please enter a new git branch name for your changes (branch will be created from #{original_branch}):  "
       new_branch = STDIN.gets.chomp
     end
 
-    # Check that the new branch isn't master, because that would be silly
-    case new_branch
-    when 'master', 'Master' 
-      puts "You can't use stagecoach to deploy your master branch.\nExiting..."
-      exit
-    end
-
-    # Make sure new local branch does not already exist.
+    # Check if local branch already exists
     if Git.branch_exist?(new_branch)
       print "There is already a local branch called #{new_branch}.[U]se or [Q]uit:"
-      if Git.diff(original_branch, new_branch) == ""
-        print "#{new_branch} is up to date with #{original_branch}.  [U]se or [Q]uit:  "
-      else 
+      if Git.diff(original_branch, new_branch) != ""
         puts "#{new_branch} is not up to date with #{original_branch}. Please use a different branch or update this one.".red
-        puts "Exiting..."
         CommandLine.line_break
         puts "The following files in branch '#{new_branch}' differ from their #{original_branch} branch versions:"
         puts Git.diff(original_branch, new_branch)
         CommandLine.line_break
+        puts "Exiting..."
         exit
       end
       case STDIN.gets.chomp
@@ -207,26 +255,6 @@ module Stagecoach
     if opts[:github]
       config[Git.current_branch] = {'github_issue' => opts[:github]}
       #TODO check that github issue is not assigned to somebody already
-    elsif opts[:redmine]
-      config[Git.current_branch] = {'redmine_issue' => redmine_issue_number}
-    end
-
-    # Set up the related issue for this branch.
-    if redmine_issue.present?
-      puts "Issue found: #{redmine_issue.subject}\n" 
-
-      # Create a Github issue referencing the redmine issue.
-      puts "Creating Git issue with subject: " + redmine_issue.subject
-      body = "Redmine issue: #{Redmine.issue_url(redmine_issue)} \n\n #{redmine_issue.description}"
-
-      # Create a Git issue.
-      github_issue =  Git.new_issue(redmine_issue.subject, body)
-      github_issue_id = github_issue[/\d+/]
-      Git.assign_issue_to_me(github_issue_id)
-
-      # Save it so we can reference it in commits using the magic of git hooks!
-      config[Git.current_branch] = {'github_issue' => github_issue_id, 'redmine_issue' => redmine_issue_number}
-
     end
 
     # Github issues are easier.
@@ -234,7 +262,7 @@ module Stagecoach
       #TODO what happens if no github issue is found?
       puts "Searching for github issue number #{issue[:number]}..."
       github_issue = Git.issue(issue[:number])
-      puts "Issue found: #{github_issue} \n" 
+      puts "Issue found: #{github_issue} \n"
     end
 
     # Saves the branch-specific details for later.
@@ -253,9 +281,8 @@ module Stagecoach
     # There's no point in pushing without any commits
     unless Git.branch_has_commits?(branch)
       puts "You don't have any uncommitted changes on branch #{branch}."
-      puts "If you have already pushed your changes, run:"
-      puts "stagecoach -d [deploy_branch]"
-      puts "Otherwise, go make some commits!"
+      puts "If you have already pushed your changes and wish to deploy this branch, run:"
+      puts "stagecoach -d [branch_to_merge_into_and_deploy]"
       puts "#%s for help" % "stagecoach -h".green
       puts "Exiting..."
       exit
@@ -275,14 +302,14 @@ module Stagecoach
         CommandLine.line_break
         puts "Pushing:"
         CommandLine.line_break
-      else 
+      else
         puts "Exiting..."
         exit
       end
     end
 
     case branch
-    when /master/i 
+    when /master/i
       puts "You can't use stagecoach to push your #{branch} branch.\nExiting..."
       exit
     end
@@ -290,7 +317,7 @@ module Stagecoach
     # Push the branch and give option to continue or quit
     Git.push(branch)
 
-    puts "Push successful."  
+    puts "Push successful."
     unless opts[:deploy_given]
       puts "stagecoach -d [branch_name] to deploy."
       puts "Exiting..."
@@ -310,31 +337,17 @@ module Stagecoach
 
     unless to_branch =~ /master/i
       Git.merge(to_branch, from_branch)
+      if $?.success? == false # if the merge fails, we don't want to push or deploy
+        CommandLine.line_break
+        puts "Stagecoach will exit because the merge could not be completed automatically".red
+        puts "Please complete the merge manually, commit, and then run `stagecoach -d [branch_name]` to deploy"
+        exit
+      end
       Git.push(to_branch)
     end
 
     Capistrano.deploy(to_branch)
 
-    # Redmine issue to feedback status
-    if redmine_issue_number =  config[from_branch][:redmine_issue] rescue abort("Completed Deploy!")
-      CommandLine.line_break
-      puts "Would you like to change your Redmine ticket status to [F]eedback or [E]rledigt? Leave blank to do nothing: "
-      case STDIN.gets.chomp
-      when /f/i
-        puts "Attempting to change Redmine ticket status to 'Feedback' for you..."
-        issue = Redmine.issue(redmine_issue_number)
-        issue.status_id = 4
-        issue.save
-        puts "Status set to 'Feedback'"
-      when 'E', 'e'
-        puts "Attempting to change Redmine ticket status to 'Erledigt' for you..."
-        issue = Redmine.issue(redmine_issue_number)
-        issue.status_id = 5
-        issue.save
-        puts "Status set to 'Erledigt'"
-      else
-      end
-      puts 'Completed deploy.'
-    end
+    # Pivotal tracker story to 'delivered' status
   end
 end
