@@ -1,4 +1,8 @@
 = Stagecoach
+
+<b>Not recommended for actual use! This was one of my first ever coding projects and the code quality is almost zero. I only keep it visible because about once every two years somebody finds in in a {stackoverflow answer I wrote in 2013}[https://stackoverflow.com/a/16146258/979091] and asks me about it.</b> - @omnikron
+
+== Original README:
 stagecoach works in two stages, init and deploy. The init stage creates a branch based on a redmine/planio issue, and the deploy stage merges and (yes!) deploys it. 
 
 In between you can use stagecoach -p to push changes from your current branch to your remote repo.  This creates a remote branch for you if one does not exist already.
